@@ -1,0 +1,23 @@
+(ns tuck.examples.main
+  (:require [tuck.core :refer [tuck send! send-value! Event process-event]]
+            [reagent.core :as r]))
+
+(defonce app (r/atom {:counter nil
+                      :greeting ""}))
+
+(defrecord ChangeGreeting [g]
+  Event
+  (process-event [_ app]
+    (assoc app :greeting g)))
+
+(defn main [c {:keys [counter greeting]}]
+  [:div
+   [:input {:value greeting
+            :on-change (send-value!)}]])
+
+(defn start []
+  (r/render (tuck app main)
+            (.getElementById js/document "app")))
+
+
+

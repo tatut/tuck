@@ -1,0 +1,29 @@
+(ns tuck.core
+  (:require [reagent.core :as r]))
+
+(defprotocol UiControlHandle
+  (send! [this event]
+    "Send the given event to the UI message processing."))
+
+(defprotocol UiEvent
+  (process-event [this app-state]
+    "Process this event for the current app state. Must return new state."))
+
+(defn send-value!
+  "Returns an event handler that sends the event's value
+  to the UI message processing after calling constructor with it."
+  [c constructor]
+  (fn [e]
+    (.stopPropagation e)
+    (send! c (constructor (-> e .-target .-value)))))
+
+
+(defn tuck
+  "Entrypoint for tuck. Takes in a reagent atom and a root component.
+  The root component will be rendered with two parameters: a ui control
+  handle (for sending events to) and the current state of the app atom."
+  [app root-component]
+  (let [ui-control (reify UiControlHandle
+                     (send! [_ event]
+                       (swap! app #(process-event event %))))]))
+
