@@ -59,7 +59,6 @@
   (fn ui-send [event]
     (assert (satisfies? Event event))
     (binding [*current-send-function* (or *current-send-function* ui-send)]
-      (.log js/console "CURRENT UI SEND " *current-send-function*)
       (swap! app #(process-event event %)))))
 
 (defn tuck
