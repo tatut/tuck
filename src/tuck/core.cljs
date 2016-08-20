@@ -1,6 +1,11 @@
 (ns tuck.core
   (:require [reagent.core :as r]))
 
+(def ^{:private true
+       :dynamic true
+       :doc "Bound during process-event to the current UI send function."}
+  *current-send-function* nil)
+
 (defprotocol Event
   (process-event [this app-state]
     "Process this event for the current app state. Must return new state."))
@@ -19,14 +24,30 @@
     (.stopPropagation e)
     (e! (apply constructor (-> e .-target .-value) args))))
 
+(defn send-async!
+  "Returns a callback which sends its argument to the UI after wrapping
+  it with the given constructor. Must be called from within process-event."
+  [constructor & args]
+  (assert (not (nil? *current-send-function*)) "send-async! called outside of process-event")
+  (let [e! *current-send-function*]
+    (fn [value]
+      (e! (apply constructor value args)))))
+
+(defn current-send-function
+  "Get the current send function. Must be called from within process-event."
+  []
+  (assert (not (nil? *current-send-function*)) "current-send-function called outside of process-event")
+  *current-send-function*)
+
 (defn wrap
   "Wrap the given UI send function with the given constructor
   and optional arguments. Returns a new UI send function where
   each event is mapped with the constructor before being sent."
   [e! wrap-constructor & args]
-  (fn [event]
+  (fn ui-send [event]
     (assert (satisfies? Event event))
-    (e! (apply wrap-constructor event args))))
+    (binding [*current-send-function* (or *current-send-function* ui-send)]
+      (e! (apply wrap-constructor event args)))))
 
 (defn wrap-path
   "Wrap the given UI send function with an UpdateAt event for
@@ -35,9 +56,11 @@
   (wrap e! ->UpdateAt (vec key-path)))
 
 (defn- control [app]
-  (fn [event]
+  (fn ui-send [event]
     (assert (satisfies? Event event))
-    (swap! app #(process-event event %))))
+    (binding [*current-send-function* (or *current-send-function* ui-send)]
+      (.log js/console "CURRENT UI SEND " *current-send-function*)
+      (swap! app #(process-event event %)))))
 
 (defn tuck
   "Entrypoint for tuck. Takes in a reagent atom and a root component.
