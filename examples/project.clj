@@ -3,7 +3,8 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.89"]
                  [figwheel "0.5.4-7"]
-                 [reagent "0.6.0-rc"]]
+                 [reagent "0.6.0-rc"]
+                 [cljs-ajax "0.5.3"]]
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.4-7"]]
 

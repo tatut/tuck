@@ -1,15 +1,28 @@
 (ns tuck.examples.main
-  (:require [tuck.core :refer [tuck wrap wrap-path send-value! Event process-event]]
-            [reagent.core :as r]))
+  (:require [tuck.core :refer [tuck wrap wrap-path send-value! Event process-event
+                               send-async!]]
+            [reagent.core :as r]
+            [ajax.core :refer [GET]]))
 
 (defonce app (r/atom {:counter-a 42
                       :counter-b nil
-                      :greeting ""}))
+                      :greeting ""
+                      :spotify {:search-term ""
+                                :results nil}}))
+
+(comment
+  ;; uncomment this form to see app atom changes in console
+  (defonce log-app-changes
+    (add-watch app ::log
+               (fn [_ _ old-app new-app]
+                 (.log js/console "CHANGE " (pr-str old-app) " => " (pr-str new-app))))))
 
 ;; Define our event types
 (defrecord Increment [])
 (defrecord ChangeGreeting [g])
 (defrecord Counter [event counter-key])
+(defrecord SearchTrack [name])
+(defrecord SearchTrackResult [result])
 
 (extend-protocol Event
   Increment
@@ -23,7 +36,19 @@
   Counter
   (process-event [{:keys [counter-key event]} app]
     (update app counter-key
-            #(process-event event %))))
+            #(process-event event %)))
+
+  SearchTrack
+  (process-event [{name :name} app]
+    (GET (str "https://api.spotify.com/v1/search?type=track&q=" name)
+         {:response-format :json
+          :handler (send-async! ->SearchTrackResult)})
+    (assoc app :search-term name))
+
+  SearchTrackResult
+  (process-event [result app]
+    (.log js/console "GOT RESULT when app is : " (pr-str app))
+    (assoc app :results (get-in result [:result "tracks" "items"]))))
 
 
 (defn counter [e! value]
@@ -31,7 +56,19 @@
    [:button {:on-click #(e! (->Increment))} "Add"]
    [:div value]])
 
-(defn main [e! {:keys [counter-a counter-b greeting]}]
+(defn spotify-search [e! {:keys [search-term results]}]
+  [:div.spotify
+   "Search for track: "
+   
+   [:input {:on-change (send-value! e! ->SearchTrack)
+            :value search-term}]
+   (when results
+     [:ul.results
+      (for [{id "id" name "name" album "album" :as r} results]
+        ^{:key id}
+        [:li.result name " (" (get album "name") ")"])])])
+
+(defn main [e! {:keys [counter-a counter-b greeting spotify]}]
   [:div
    "Counter A: "
    ;; wrap events in a Counter record
@@ -49,7 +86,12 @@
    [:br]
    
    ;; Trying to send non-Events will fail (assert failure in console)
-   [:button {:on-click #(e! :D)} "This won't work"]])
+   [:button {:on-click #(e! :D)} "This won't work"]
+
+   [:br]
+
+   [spotify-search (wrap-path e! :spotify) spotify]
+   ])
 
 (defn start []
   (r/render [tuck app main]
