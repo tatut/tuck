@@ -1,4 +1,4 @@
-(defproject tuck "0.1.0-SNAPSHOT"
+(defproject webjure/tuck "0.2"
   :description "Tuck: a simple helper for UI folding"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.89"]
