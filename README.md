@@ -1,4 +1,8 @@
-# tuck
+# ![Tuck logo](https://github.com/tatut/tuck/blob/master/tucklogo.png?raw=true) Tuck
+
+[![Clojars Project](https://img.shields.io/clojars/v/webjure/tuck.svg)](https://clojars.org/webjure/tuck)
+
+Tuck helps you fold away those reset!s and swap!s from your UI views.
 
 Tuck is a minimalistic helper library for UI folding in Reagent.
 Tuck defines a protocol for events and how they are processed and provides a simple way to send events from UI code to be processed.
