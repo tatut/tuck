@@ -1,6 +1,7 @@
 # ![Tuck logo](https://github.com/tatut/tuck/blob/master/tucklogo.png?raw=true) Tuck
 
 [![Clojars Project](https://img.shields.io/clojars/v/webjure/tuck.svg)](https://clojars.org/webjure/tuck)
+[![CircleCI](https://circleci.com/gh/tatut/tuck.svg?style=svg)](https://circleci.com/gh/tatut/tuck)
 
 Tuck helps you fold away those reset!s and swap!s from your UI views.
 
