@@ -7,19 +7,20 @@
             [tuck.core :as t]
             [dommy.core :as dommy]))
 
-(def ^:dynamic c)
+(def c (atom nil))
 
 (defn sel1 [selector]
-  (dommy/sel1 c selector))
+  (dommy/sel1 @c selector))
 (defn sel [selector]
-  (dommy/sel c selector))
+  (dommy/sel @c selector))
 
+(defn after [millis callback]
+  (.setTimeout js/window callback millis))
 
 (use-fixtures :each
-  (fn [test-fn]
-    (binding [c (tu/new-container!)]
-      (test-fn)
-      (tu/unmount! c))))
+  {:before #(reset! c (tu/new-container!))
+   :after #(do (tu/unmount! @c)
+               (reset! c nil))} )
 
 (defrecord ChangeValue [to]
   t/Event
@@ -33,7 +34,7 @@
 
 (deftest simple-input
   (let [app (r/atom {:value ""})]
-    (r/render [t/tuck app simple-input-component] c)
+    (r/render [t/tuck app simple-input-component] @c)
 
     (sim/change (sel1 :#i1) {:target {:value "foo"}})
 
@@ -50,7 +51,7 @@
 
     (is (nil? (sel1 :#i1)))
     
-    (r/render [t/tuck app component] c)
+    (r/render [t/tuck app component] @c)
 
     (= (.-value (sel1 :#i1)) "ME")
 
@@ -60,3 +61,73 @@
 
     (is (= "WRAP ME!" (get-in @app [:deeply :nested 1 :value]) (.-value (sel1 :#i1))))
     (is (= @app {:deeply {:nested [:not-me {:value "WRAP ME!"} :not-me-either]}}))))
+
+;;;;;;;;;;;;
+;; Fake AJAX call
+
+(defrecord SearchResults []
+  t/Event
+  (process-event [_ app]
+    ;; Provide some fake results
+    (assoc app
+           :search-in-progress? false
+           :results [{:id 1 :url "http://catpics.example.com/cat1.jpg" :name "Cat doing funny things"}
+                     {:id 2 :url "http://cats-r-us.example.com/cat2.gif" :name "Dancing cat"}])))
+
+(defrecord SearchTerm [term]
+  t/Event
+  (process-event [_ app]
+    (let [search? (>= (count term) 3)]
+      (when search?
+        (after 32 (t/send-async! ->SearchResults)))
+      (assoc app
+             :term term
+             :search-in-progress? search?))))
+
+
+
+(defn search [e! {:keys [term results search-in-progress?]}]
+  [:div.search
+   "Search for: " [:input#search
+                   {:value term
+                    :on-change (t/send-value! e! ->SearchTerm)}]
+   (when search-in-progress?
+     [:div.loader "Searching..."])
+   (when-not (empty? results)
+     [:ul.results
+      (for [{:keys [id name url]} results]
+        ^{:key id}
+        [:li.result [:a {:href url} name]])])])
+
+(deftest async-search-test
+  (let [app (r/atom {})]
+    (async
+     done
+
+     (r/render [t/tuck app search] @c)
+     
+     (is (= (.-value (sel1 :#search)) ""))
+
+     (sim/change (sel1 :#search) {:target {:value "ca"}})
+
+     (r/force-update-all)
+
+     ;; writing 2 characters does not trigger search yet
+     (is (= "ca" (.-value (sel1 :#search)) (:term @app)))
+     (is (not (:search-in-progress? @app)))
+
+
+     ;; writing a third character triggers search
+     (sim/change (sel1 :#search) {:target {:value "cat"}})
+     (r/force-update-all)
+     (is (= "cat" (.-value (sel1 :#search)) (:term @app)))
+     (is (:search-in-progress? @app))
+     (is (sel1 :.loader))
+     
+     (after 100
+            #(do
+               ;; Results have appeared
+               (is (nil? (sel1 :.loader)))
+               (is (= 2 (count (sel :li.result))))
+               (is (= "Dancing cat" (.-innerHTML (sel1 "li.result:nth-child(2) a"))))
+               (done))))))
