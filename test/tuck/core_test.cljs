@@ -105,14 +105,15 @@
      done
 
      (r/render [t/tuck app search] @c)
-     
+
+     ;; after initial render, search term is empty, no results or loader is showing
      (is (= (.-value (sel1 :#search)) ""))
-
-     (sim/change (sel1 :#search) {:target {:value "ca"}})
-
-     (r/force-update-all)
+     (is (nil? (sel1 :div.loader)))
+     (is (nil? (sel1 :ul)))
 
      ;; writing 2 characters does not trigger search yet
+     (sim/change (sel1 :#search) {:target {:value "ca"}})
+     (r/force-update-all)
      (is (= "ca" (.-value (sel1 :#search)) (:term @app)))
      (is (not (:search-in-progress? @app)))
 
