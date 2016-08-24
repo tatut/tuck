@@ -2,10 +2,12 @@
   (:require [tuck.core :refer [tuck wrap wrap-path send-value! Event process-event
                                send-async!]]
             [reagent.core :as r]
-            [ajax.core :refer [GET]]))
+            [ajax.core :refer [GET]])
+  (:require-macros [tuck.intercept :refer [intercept]]))
 
 (defonce app (r/atom {:counter-a 42
                       :counter-b nil
+                      :crazy-counter 10
                       :greeting ""
                       :spotify {:search-term ""
                                 :results nil}}))
@@ -19,6 +21,7 @@
 
 ;; Define our event types
 (defrecord Increment [])
+(defrecord Decrement [])
 (defrecord ChangeGreeting [g])
 (defrecord Counter [event counter-key])
 (defrecord SearchTrack [name])
@@ -28,6 +31,10 @@
   Increment
   (process-event [_ state]
     (inc state))
+
+  Decrement
+  (process-event [_ state]
+    (dec state))
   
   ChangeGreeting
   (process-event [{g :g} app]
@@ -53,7 +60,8 @@
 
 (defn counter [e! value]
   [:div
-   [:button {:on-click #(e! (->Increment))} "Add"]
+   [:button {:on-click #(e! (->Increment))} "+1"]
+   [:button {:on-click #(e! (->Decrement))} "-1"]
    [:div value]])
 
 (defn spotify-search [e! {:keys [search-term results]}]
@@ -68,7 +76,7 @@
         ^{:key id}
         [:li.result name " (" (get album "name") ")"])])])
 
-(defn main [e! {:keys [counter-a counter-b greeting spotify]}]
+(defn main [e! {:keys [counter-a counter-b crazy-counter greeting spotify]}]
   [:div
    "Counter A: "
    ;; wrap events in a Counter record
@@ -79,7 +87,19 @@
    ;; wrap-path uses the built-in UpdateAt event type
    "Counter B: "
    [counter (wrap-path e! :counter-b) counter-b]
-
+   [:br]
+   
+   ;; A crazy counter that has increment/decrement swapped
+   "Crazy counter:"
+   (let [e! (wrap-path e! :crazy-counter)]
+     [counter (intercept
+               e!
+               (Increment i (do (.log js/console "GOT Increment: " i)
+                                (e! (->Decrement))))
+               (Decrement d (do (.log js/console "Got Decrement: " d)
+                                (e! (->Increment)))))
+      crazy-counter])
+   
    ;; Send greeting events 
    [:input {:value greeting
             :on-change (send-value! e! ->ChangeGreeting)}]
