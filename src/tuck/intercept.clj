@@ -4,7 +4,8 @@
   "Return a new send function that wraps the given send function.
   The event types specified in intercept forms are intercepted and
   the their respective forms are run instead of sending the event.
-  Events that have no intercept are sent unaltered."
+  Events that have no intercept are sent unaltered.
+  A final default interceptor may be specified with the type :default."
   [e! & intercept-forms]
   (let [event (gensym "EVENT")]
     `(let [e!# ~e!
@@ -14,9 +15,17 @@
                                    [type `(fn [event#]
                                             (let [~bind event#]
                                               ~form))]))
-                                intercept-forms)]
+                                (take-while #(not= :default (first %))
+                                            intercept-forms))
+           default-interceptor# ~(when-let [default-form (first (drop-while #(not= :default (first %))
+                                                                            intercept-forms))]
+                                   (let [[_ bind form] default-form]
+                                     `(fn [event#]
+                                        (let [~bind event#]
+                                          ~form))))]
        (fn [event#]
-         (if-let [interceptor# (get interceptors# (type event#))]
+         (if-let [interceptor# (or (get interceptors# (type event#))
+                                   default-interceptor#)]
            (interceptor# event#)
            (e!# event#))))))
 
@@ -41,5 +50,6 @@
                     (e! (->AddOrderItem (orders/next-order-id orders)
                                         data)))
             (RemoveRow {p :at-position}
-                       (e! (->RemoveOrderItem (:id (nth orders p))))))
+                       (e! (->RemoveOrderItem (:id (nth orders p)))))
+            (:default e  ))
      orders]))
