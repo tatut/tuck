@@ -6,6 +6,10 @@
        :doc "Bound during process-event to the current UI send function."}
   *current-send-function* nil)
 
+(def ^{:dynamic true
+       :doc "Bound to false when replaying events to disable side-effects."}
+  *allow-actions* true)
+
 (defprotocol Event
   (process-event [this app-state]
     "Process this event for the current app state. Must return new state."))
@@ -17,12 +21,18 @@
                #(process-event event %))))
 
 (defn send-value!
-  "Returns an event handler that sends the event's value
+  "Returns a UI event handler that sends the event's value
   to the UI message processing after calling constructor with it."
   [e! constructor & args]
   (fn [e]
     (.stopPropagation e)
     (e! (apply constructor (-> e .-target .-value) args))))
+
+(defn current-send-function
+  "Get the current send function. Must be called from within process-event."
+  []
+  (assert (not (nil? *current-send-function*)) "current-send-function called outside of process-event")
+  *current-send-function*)
 
 (defn send-async!
   "Returns a callback which sends its argument to the UI after wrapping
@@ -33,11 +43,16 @@
     (fn [value]
       (e! (apply constructor value args)))))
 
-(defn current-send-function
-  "Get the current send function. Must be called from within process-event."
-  []
-  (assert (not (nil? *current-send-function*)) "current-send-function called outside of process-event")
-  *current-send-function*)
+(defn action!
+  "Run an action function that may side-effect and schedule asynchronous actions.
+  The first parameter of the action is the current send function. Actions only run
+  when *allow-actions* is true."
+  [action-fn & args]
+  (assert (not (nil? *current-send-function*)) "action! called outside of process-event")
+  (when *allow-actions*
+    (let [e! *current-send-function*]
+      (apply action-fn e! args))))
+
 
 (defn wrap
   "Wrap the given UI send function with the given constructor
@@ -59,7 +74,9 @@
   (fn ui-send [event]
     (assert (satisfies? Event event))
     (binding [*current-send-function* (or *current-send-function* ui-send)]
-      (swap! app #(process-event event %)))))
+      (swap! app
+             (fn [current-app-state]
+               (process-event event current-app-state))))))
 
 (defn tuck
   "Entrypoint for tuck. Takes in a reagent atom and a root component.
