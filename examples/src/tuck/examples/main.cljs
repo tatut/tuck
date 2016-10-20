@@ -1,6 +1,8 @@
 (ns tuck.examples.main
   (:require [tuck.core :refer [tuck wrap wrap-path send-value! Event process-event
+                               action!
                                send-async!]]
+            [tuck.debug :as debug]
             [reagent.core :as r]
             [ajax.core :refer [GET]])
   (:require-macros [tuck.intercept :refer [intercept]]))
@@ -11,13 +13,6 @@
                       :greeting ""
                       :spotify {:search-term ""
                                 :results nil}}))
-
-(comment
-  ;; uncomment this form to see app atom changes in console
-  (defonce log-app-changes
-    (add-watch app ::log
-               (fn [_ _ old-app new-app]
-                 (.log js/console "CHANGE " (pr-str old-app) " => " (pr-str new-app))))))
 
 ;; Define our event types
 (defrecord Increment [])
@@ -47,9 +42,11 @@
 
   SearchTrack
   (process-event [{name :name} app]
-    (GET (str "https://api.spotify.com/v1/search?type=track&q=" name)
-         {:response-format :json
-          :handler (send-async! ->SearchTrackResult)})
+    (action!
+     (fn [e!]
+       (GET (str "https://api.spotify.com/v1/search?type=track&q=" name)
+            {:response-format :json
+             :handler #(e! (->SearchTrackResult %))})))
     (assoc app :search-term name))
 
   SearchTrackResult
@@ -114,5 +111,5 @@
    ])
 
 (defn start []
-  (r/render [tuck app main]
+  (r/render [debug/tuck app main]
             (.getElementById js/document "app")))
