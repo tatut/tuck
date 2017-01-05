@@ -23,11 +23,13 @@
                                      `(fn [event#]
                                         (let [~bind event#]
                                           ~form))))]
-       (fn [event#]
-         (if-let [interceptor# (or (get interceptors# (type event#))
-                                   default-interceptor#)]
-           (interceptor# event#)
-           (e!# event#))))))
+       (fn ui-send-intercept# [event#]
+         (assert (satisfies? tuck.core/Event event))
+         (binding [tuck.core/*current-send-function* (or *current-send-function* ui-send)]
+           (if-let [interceptor# (or (get interceptors# (type event#))
+                                     default-interceptor#)]
+             (interceptor# event#)
+             (e!# event#)))))))
 
 (comment
   ;; Simple example of syntax
@@ -35,7 +37,7 @@
   ;; Generic messages for a "table of items" type of component
   (defrecord AddRow [data])
   (defrecord RemoveRow [at-position])
-  
+
   ;; We want to translate the generic types into
   ;; our domain specific order model. (for example we store
   ;; the data in a different format)
