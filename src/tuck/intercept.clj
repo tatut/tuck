@@ -26,7 +26,7 @@
        (fn ui-send-intercept# [event#]
          (assert (satisfies? tuck.core/Event event#))
          (binding [tuck.core/*current-send-function*
-                   (or tuck.core/*current-send-function* ui-send)]
+                   (or tuck.core/*current-send-function* ui-send-intercept#)]
            (if-let [interceptor# (or (get interceptors# (type event#))
                                      default-interceptor#)]
              (interceptor# event#)
