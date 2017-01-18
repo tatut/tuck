@@ -6,7 +6,8 @@
             [lein-doo "0.1.7"]]
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [reagent "0.6.0-rc"]]}}
+                                  [reagent "0.6.0-rc"]
+                                  [org.clojure/core.async "0.2.395"]]}}
   :cljsbuild {:builds [{:id "prod"
                         :source-paths ["src"]
                         :compiler {:optimizations :advanced

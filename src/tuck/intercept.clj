@@ -25,12 +25,21 @@
                                           ~form))))]
        (fn ui-send-intercept# [event#]
          (assert (satisfies? tuck.core/Event event#))
-         (binding [tuck.core/*current-send-function*
-                   (or tuck.core/*current-send-function* ui-send-intercept#)]
+         (binding [tuck.core/*current-send-function* (or tuck.core/*current-send-function* e!#)]
            (if-let [interceptor# (or (get interceptors# (type event#))
                                      default-interceptor#)]
              (interceptor# event#)
              (e!# event#)))))))
+
+(defmacro send-to
+  "Send to the given UI send function. Sends to captured send-functions must
+  be done via this function when called in intercept handlers. This sets the
+  binding of *current-send-function* properly so that it does not point to a
+  wrapped function when calling send-async!."
+  [e! event]
+  `(let [e!# ~e!]
+     (binding [tuck.core/*current-send-function* nil]
+       (e!# ~event))))
 
 (comment
   ;; Simple example of syntax
