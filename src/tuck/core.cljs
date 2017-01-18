@@ -78,13 +78,33 @@
              (fn [current-app-state]
                (process-event event current-app-state))))))
 
+(defn- control-with-paths [app path-fn]
+  (fn ui-send [event]
+    (assert (satisfies? Event event))
+    (binding [*current-send-function* ui-send]
+      (let [path (path-fn event)]
+        (if path
+          (swap! app
+                 (fn [current-app-state]
+                   (update-in current-app-state path
+                              (fn [current-app-state-in-path]
+                                (process-event event current-app-state-in-path)))))
+          (swap! app
+                 (fn [current-app-state]
+                   (process-event event current-app-state))))))))
+
 (defn tuck
   "Entrypoint for tuck. Takes in a reagent atom and a root component.
   The root component will be rendered with two parameters: a ui control
-  function (for sending events to) and the current state of the app atom."
-  [app root-component]
-  [root-component
-   (control app)
-   @app])
-
-
+  function (for sending events to) and the current state of the app atom.
+  If path-fn is provided, it is called to return a path (for update-in)
+  for the event. If the path-fn returns nil for the event, the event is
+  applied to the app root. Path-fn is an alternative to wrapping send functions
+  for routing events to different parts of the state atom."
+  ([app root-component] [tuck app root-component nil])
+  ([app root-component path-fn]
+   [root-component
+    (if path-fn
+      (control-with-paths app path-fn)
+      (control app))
+    @app]))
