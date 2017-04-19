@@ -12,7 +12,17 @@ Tuck can be used at any level (not just at the app root): simply pass tuck a rea
 
 Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but is even lighter and has no dependencies (aside form Reagent itself).
 
+## Changes
+
+### Version 0.4 (2017-04-19)
+
+Support clojure.spec validation of app state.
+Add options map as 3rd argument that can specify new options:
+
+* :spec
+* :on-invalid-state
+
+
 ## Usage
 
 Clone this repo and run "lein figwheel dev" in the examples folder.
-
