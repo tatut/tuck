@@ -1,5 +1,6 @@
 (ns tuck.core
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [clojure.spec :as s]))
 
 (def ^{:private true
        :dynamic true
@@ -70,41 +71,76 @@
   [e! & key-path]
   (wrap e! ->UpdateAt (vec key-path)))
 
-(defn- control [app]
-  (fn ui-send [event]
-    (assert (satisfies? Event event))
-    (binding [*current-send-function* (or *current-send-function* ui-send)]
-      (swap! app
-             (fn [current-app-state]
-               (process-event event current-app-state))))))
+(defn- validate [previous-app-state event new-app-state spec on-invalid-state]
+  (if (or (nil? spec)
+          (s/valid? spec new-app-state))
+    new-app-state
+    (on-invalid-state previous-app-state event new-app-state spec)))
 
-(defn- control-with-paths [app path-fn]
-  (fn ui-send [event]
-    (assert (satisfies? Event event))
-    (binding [*current-send-function* ui-send]
-      (let [path (path-fn event)]
-        (if path
-          (swap! app
-                 (fn [current-app-state]
-                   (update-in current-app-state path
-                              (fn [current-app-state-in-path]
-                                (process-event event current-app-state-in-path)))))
-          (swap! app
-                 (fn [current-app-state]
-                   (process-event event current-app-state))))))))
+(defn- control
+  ([app]
+   (control app (constantly nil) nil nil))
+  ([app path-fn spec on-invalid-state]
+   (fn ui-send [event]
+     (assert (satisfies? Event event))
+     (binding [*current-send-function* ui-send]
+       (let [path (path-fn event)]
+         (if path
+           (swap! app
+                  (fn [current-app-state]
+                    (let [new-app-state
+                          (update-in current-app-state path
+                                     (fn [current-app-state-in-path]
+                                       (process-event event current-app-state-in-path)))]
+                      (validate current-app-state event new-app-state
+                                spec on-invalid-state))))
+           (swap! app
+                  (fn [current-app-state]
+                    (let [new-app-state (process-event event current-app-state)]
+                      (validate current-app-state event new-app-state
+                                spec on-invalid-state))))))))))
+
+(defn control-with-paths [app path-fn]
+  (control app path-fn nil nil))
+
+(defn- default-on-invalid-state [previous-state event new-state spec]
+  (.warn js/console
+         "Discarding invalid state after event: " (pr-str event) "\n"
+         (s/explain-str spec new-state))
+  previous-state)
 
 (defn tuck
   "Entrypoint for tuck. Takes in a reagent atom and a root component.
   The root component will be rendered with two parameters: a ui control
   function (for sending events to) and the current state of the app atom.
-  If path-fn is provided, it is called to return a path (for update-in)
-  for the event. If the path-fn returns nil for the event, the event is
-  applied to the app root. Path-fn is an alternative to wrapping send functions
-  for routing events to different parts of the state atom."
-  ([app root-component] [tuck app root-component nil])
-  ([app root-component path-fn]
+
+  The optional options map can have the following keys:
+  :path-fn   If path-fn is provided, it is called to return a path (for update-in)
+             for the event. If the path-fn returns nil for the event, the event is
+             applied to the app root. Path-fn is an alternative to wrapping send
+             functions for routing events to different parts of the state atom.
+  :spec      If specified, the app state is validate against the spec after each
+             event. If the new state is invalid the on-invalid-state handler is
+             called to fix it.
+
+  :on-invalid-state
+             Handler to call when the app state after an event fails spec validation.
+             Must return new (fixed) app state. Takes 4 arguments: the previous state,
+             the event that caused the invalid state, the new invalid state and the
+             spec it was validated against.
+             Default implementation logs the event and clojure.spec explain output
+             and returns the previous valid state.
+
+  For backwards compatibility, if options is a function, it is interpreted to mean
+  the path-fn.
+"
+  ([app root-component] [tuck app root-component {}])
+  ([app root-component options]
    [root-component
-    (if path-fn
-      (control-with-paths app path-fn)
-      (control app))
+    (let [options (if (fn? options)
+                    {:path-fn options}
+                    options)
+          {:keys [path-fn spec on-invalid-state]} options]
+      (control app (or path-fn (constantly nil))
+               spec (or on-invalid-state default-on-invalid-state)))
     @app]))

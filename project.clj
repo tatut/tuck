@@ -1,7 +1,7 @@
 (defproject webjure/tuck "0.3"
   :description "Tuck: a simple helper for UI folding"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.225"]]
+                 [org.clojure/clojurescript "1.9.521"]]
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-doo "0.1.7"]]
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]

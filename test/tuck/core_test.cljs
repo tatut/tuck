@@ -5,22 +5,11 @@
             [cljs-react-test.utils :as tu]
             [reagent.core :as r]
             [tuck.core :as t]
-            [dommy.core :as dommy]))
+            [dommy.core :as dommy]
+            [tuck.testutils :refer [container-fixture sel1 sel after c]]))
 
-(def c (atom nil))
 
-(defn sel1 [selector]
-  (dommy/sel1 @c selector))
-(defn sel [selector]
-  (dommy/sel @c selector))
-
-(defn after [millis callback]
-  (.setTimeout js/window callback millis))
-
-(use-fixtures :each
-  {:before #(reset! c (tu/new-container!))
-   :after #(do (tu/unmount! @c)
-               (reset! c nil))} )
+(use-fixtures :each container-fixture)
 
 (defrecord ChangeValue [to]
   t/Event
@@ -50,7 +39,7 @@
                      (get-in app [:deeply :nested 1])])]
 
     (is (nil? (sel1 :#i1)))
-    
+
     (r/render [t/tuck app component] @c)
 
     (= (.-value (sel1 :#i1)) "ME")
@@ -124,7 +113,7 @@
      (is (= "cat" (.-value (sel1 :#search)) (:term @app)))
      (is (:search-in-progress? @app))
      (is (sel1 :.loader))
-     
+
      (after 100
             #(do
                ;; Results have appeared
