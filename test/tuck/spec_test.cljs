@@ -1,6 +1,6 @@
 (ns tuck.spec-test
   (:require [tuck.core :as t]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [reagent.core :as r]
             [dommy.core :as dommy]
             [cljs-react-test.simulate :as sim]
