@@ -121,3 +121,32 @@
                (is (= 2 (count (sel :li.result))))
                (is (= "Dancing cat" (.-innerHTML (sel1 "li.result:nth-child(2) a"))))
                (done))))))
+
+(defrecord AsyncNoArgs []
+  t/Event
+  (process-event [_ app]
+    (assoc app :async-no-args :ok)))
+
+(defrecord CallAsync []
+  t/Event
+  (process-event [_ app]
+    (let [call (t/send-async! ->AsyncNoArgs)]
+      (.setTimeout js/window call 10))
+    (assoc app :calling-async-no-args true)))
+
+(defn async-test [e! app]
+  [:button {:on-click #(e! (->CallAsync))} "call async"])
+
+(deftest async-without-args
+  (let [app (r/atom {})])
+  (async
+   done
+
+   (r/render [t/tuck app async-test])
+
+   (sim/click :button {})
+
+   (.setTimeout
+    #(do
+       (is (= :ok (:async-no-args @app)) "async call has been done")
+       (done)))))
