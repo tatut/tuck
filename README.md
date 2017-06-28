@@ -14,6 +14,13 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 
 ## Changes
 
+### Version 0.4.1 (2017-06-28)
+
+Minor fix release
+
+* change clojure.spec namespaces to .alpha suffixed
+* allow 0 or more args to send-async! fn (#4)
+
 ### Version 0.4 (2017-04-19)
 
 Support clojure.spec validation of app state.
