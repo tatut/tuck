@@ -1,7 +1,7 @@
 (defproject tuck-examples "0.1.0-SNAPSHOT"
   :description "Tuck: a simple helper for UI folding"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.89"]
+                 [org.clojure/clojurescript "1.9.562"]
                  [figwheel "0.5.4-7"]
                  [reagent "0.6.0-rc"]
                  [cljs-ajax "0.5.3"]]

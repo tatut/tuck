@@ -1,6 +1,6 @@
 (ns tuck.core
   (:require [reagent.core :as r]
-            [clojure.spec :as s]))
+            [clojure.spec.alpha :as s]))
 
 (def ^{:private true
        :dynamic true
