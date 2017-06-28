@@ -131,22 +131,23 @@
   t/Event
   (process-event [_ app]
     (let [call (t/send-async! ->AsyncNoArgs)]
-      (.setTimeout js/window call 10))
+      (after 1 call))
     (assoc app :calling-async-no-args true)))
 
 (defn async-test [e! app]
   [:button {:on-click #(e! (->CallAsync))} "call async"])
 
 (deftest async-without-args
-  (let [app (r/atom {})])
-  (async
-   done
+  (let [app (r/atom {})]
+    (async
+     done
 
-   (r/render [t/tuck app async-test])
+     (r/render [t/tuck app async-test] @c)
 
-   (sim/click :button {})
+     (sim/click (sel1 :button) {})
 
-   (.setTimeout
-    #(do
-       (is (= :ok (:async-no-args @app)) "async call has been done")
-       (done)))))
+     (after
+      5
+      #(do
+         (is (= :ok (:async-no-args @app)) "async call has been done")
+         (done))))))
