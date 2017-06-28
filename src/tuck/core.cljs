@@ -41,8 +41,8 @@
   [constructor & args]
   (assert (not (nil? *current-send-function*)) "send-async! called outside of process-event")
   (let [e! *current-send-function*]
-    (fn [value]
-      (e! (apply constructor value args)))))
+    (fn [& values]
+      (e! (apply constructor (concat values args))))))
 
 (defn action!
   "Run an action function that may side-effect and schedule asynchronous actions.
