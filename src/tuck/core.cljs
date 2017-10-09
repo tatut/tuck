@@ -83,7 +83,7 @@
   ([app path-fn spec on-invalid-state]
    (fn ui-send [event]
      (assert (satisfies? Event event))
-     (binding [*current-send-function* ui-send]
+     (binding [*current-send-function* (or *current-send-function* ui-send)]
        (let [path (path-fn event)]
          (if path
            (swap! app
