@@ -14,6 +14,14 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 
 ## Changes
 
+### Version 0.4.3 (2017-10-20)
+
+* Performance improvement: Evaluate options once during component creation.
+
+### Version 0.4.2 (2017-10-09)
+
+* Bugfix: Fix binding of *current-send-function*
+
 ### Version 0.4.1 (2017-06-28)
 
 Minor fix release

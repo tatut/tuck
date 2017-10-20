@@ -133,14 +133,16 @@
 
   For backwards compatibility, if options is a function, it is interpreted to mean
   the path-fn.
-"
+
+  The options are evaluated once, when the component is created and changes to
+  options don't take effect during the component's lifetime."
   ([app root-component] [tuck app root-component {}])
   ([app root-component options]
-   [root-component
-    (let [options (if (fn? options)
+   (let [options (if (fn? options)
                     {:path-fn options}
                     options)
-          {:keys [path-fn spec on-invalid-state]} options]
-      (control app (or path-fn (constantly nil))
-               spec (or on-invalid-state default-on-invalid-state)))
-    @app]))
+         {:keys [path-fn spec on-invalid-state]} options
+         e! (control app (or path-fn (constantly nil))
+                     spec (or on-invalid-state default-on-invalid-state))]
+     (fn [app root-component _]
+       [root-component e! @app]))))
