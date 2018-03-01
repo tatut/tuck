@@ -29,7 +29,7 @@
 
     (r/force-update-all)
 
-    (is (= "foo" (:value @app) (.-value (sel1 :#i1))))))
+    (is (= "foo" (:value @app)))))
 
 (deftest wrap-path
   (let [app (r/atom {:deeply {:nested [:not-me {:value "ME"} :not-me-either]}})
@@ -155,11 +155,13 @@
 
 (define-event StartEditing []
   {} ;; no options, defaults for everything
+  (println "start editing")
   (assoc app :user {}))
 
 (define-event SetName [new-name]
   {:path [:user :name]}
-  name)
+  (println "setting name to " new-name)
+  new-name)
 
 (define-event PrependTitle [title]
   {:path [:user :name]
@@ -170,19 +172,19 @@
   [:div.name-editor-ui
    (if (:user app)
      [:div
-      [:input#name {:value (:name (:user app))
-                    :on-change #(t/send-value! e! ->SetName)}]
+      [:input#namefield {:value (:name (:user app))
+                         :on-change (t/send-value! e! ->SetName)}]
       [:button#add-title {:on-click #(e! (->PrependTitle "Mr."))} "add Mr. title"]]
      [:button#start-editing {:on-click #(e! (->StartEditing))}])])
 
-#_(deftest name-editor-test
+(deftest name-editor-test
   (let [app (r/atom {})]
     (r/render [t/tuck app name-editor-ui] @c)
 
     (sim/click (sel1 :#start-editing) {})
     (r/force-update-all)
 
-    (sim/change (sel1 :#name) {:target {:value "Anderson"}})
+    (sim/change (sel1 :#namefield) {:target {:value "Anderson"}})
     (r/force-update-all)
     (is (= {:user {:name "Anderson"}} @app))
 
