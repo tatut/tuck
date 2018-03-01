@@ -14,6 +14,10 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 
 ## Changes
 
+### Version 0.4.4 (2018-03-01)
+
+* Added: new (somewhat) experimental `define-event` macro for defining the record and implementation in one go
+
 ### Version 0.4.3 (2017-10-20)
 
 * Performance improvement: Evaluate options once during component creation.
