@@ -1,7 +1,8 @@
 (ns tuck.examples.main
   (:require [tuck.core :refer [tuck wrap wrap-path send-value! Event process-event
                                action!
-                               send-async!]]
+                               send-async!]
+             :refer-macros [define-event]]
             [tuck.debug :as debug]
             [reagent.core :as r]
             [ajax.core :refer [GET]])
@@ -30,7 +31,7 @@
   Decrement
   (process-event [_ state]
     (dec state))
-  
+
   ChangeGreeting
   (process-event [{g :g} app]
     (assoc app :greeting g))
@@ -54,6 +55,13 @@
     (.log js/console "GOT RESULT when app is : " (pr-str app))
     (assoc app :results (get-in result [:result "tracks" "items"]))))
 
+(define-event IncrementCounterBy [counter num]
+  {:app counters}
+  (update counters counter + num))
+
+(define-event IncrementCounterABy [num]
+  {:path [:counter-a]}
+  (+ app num))
 
 (defn counter [e! value]
   [:div
@@ -64,7 +72,7 @@
 (defn spotify-search [e! {:keys [search-term results]}]
   [:div.spotify
    "Search for track: "
-   
+
    [:input {:on-change (send-value! e! ->SearchTrack)
             :value search-term}]
    (when results
@@ -85,7 +93,12 @@
    "Counter B: "
    [counter (wrap-path e! :counter-b) counter-b]
    [:br]
-   
+
+   ;; Test define-event events
+   [:button {:on-click #(e! (->IncrementCounterBy :counter-b counter-a))} "inc counter-b by counter-a"]
+   [:button {:on-click #(e! (->IncrementCounterABy counter-a))} "double counter a"]
+   [:br]
+
    ;; A crazy counter that has increment/decrement swapped
    "Crazy counter:"
    (let [e! (wrap-path e! :crazy-counter)]
@@ -96,12 +109,12 @@
                (Decrement d (do (.log js/console "Got Decrement: " d)
                                 (e! (->Increment)))))
       crazy-counter])
-   
-   ;; Send greeting events 
+
+   ;; Send greeting events
    [:input {:value greeting
             :on-change (send-value! e! ->ChangeGreeting)}]
    [:br]
-   
+
    ;; Trying to send non-Events will fail (assert failure in console)
    [:button {:on-click #(e! :D)} "This won't work"]
 

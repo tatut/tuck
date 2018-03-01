@@ -1,5 +1,5 @@
 (ns tuck.core-test
-  (:require [tuck.core :as sut]
+  (:require [tuck.core :as sut :refer-macros [define-event]]
             [clojure.test :refer [use-fixtures deftest is async]]
             [cljs-react-test.simulate :as sim]
             [cljs-react-test.utils :as tu]
@@ -72,7 +72,6 @@
       (assoc app
              :term term
              :search-in-progress? search?))))
-
 
 
 (defn search [e! {:keys [term results search-in-progress?]}]
@@ -151,3 +150,42 @@
       #(do
          (is (= :ok (:async-no-args @app)) "async call has been done")
          (done))))))
+
+;; Test define-event macro
+
+(define-event StartEditing []
+  {} ;; no options, defaults for everything
+  (assoc app :user {}))
+
+(define-event SetName [new-name]
+  {:path [:user :name]}
+  name)
+
+(define-event PrependTitle [title]
+  {:path [:user :name]
+   :app name}
+  (str title " " name))
+
+(defn name-editor-ui [e! app]
+  [:div.name-editor-ui
+   (if (:user app)
+     [:div
+      [:input#name {:value (:name (:user app))
+                    :on-change #(t/send-value! e! ->SetName)}]
+      [:button#add-title {:on-click #(e! (->PrependTitle "Mr."))} "add Mr. title"]]
+     [:button#start-editing {:on-click #(e! (->StartEditing))}])])
+
+#_(deftest name-editor-test
+  (let [app (r/atom {})]
+    (r/render [t/tuck app name-editor-ui] @c)
+
+    (sim/click (sel1 :#start-editing) {})
+    (r/force-update-all)
+
+    (sim/change (sel1 :#name) {:target {:value "Anderson"}})
+    (r/force-update-all)
+    (is (= {:user {:name "Anderson"}} @app))
+
+    (sim/click (sel1 :#add-title) {})
+    (r/force-update-all)
+    (is (= {:user {:name "Mr. Anderson"}} @app))))

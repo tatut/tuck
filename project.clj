@@ -1,13 +1,15 @@
 (defproject webjure/tuck "0.4.3"
   :description "Tuck: a simple helper for UI folding"
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.562"]]
-  :plugins [[lein-cljsbuild "1.1.2"]
-            [lein-doo "0.1.7"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.9.946"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-doo "0.1.8"]]
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
-                                  [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [reagent "0.6.0-rc"]
-                                  [org.clojure/core.async "0.2.395"]]}}
+                                  [cljs-react-test "0.1.4-SNAPSHOT"
+                                   :exclusions [cljsjs/react
+                                                cljsjs/react-with-addons]]
+                                  [reagent "0.7.0" :exclusions [cljsjs/react]]
+                                  [cljsjs/react-with-addons "15.6.1-0"]]}}
   :cljsbuild {:builds [{:id "prod"
                         :source-paths ["src"]
                         :compiler {:optimizations :advanced
@@ -16,9 +18,7 @@
                        {:id "test"
                         :source-paths ["src" "test"]
                         :compiler {:output-to "target/cljs/test/test.js"
-                                   :output-dir "target/cljs/test"
                                    :optimizations :none
                                    :pretty-print  true
-                                   :source-map    true
                                    :closure-output-charset "US-ASCII"
                                    :main tuck.runner}}]})
