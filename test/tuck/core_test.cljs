@@ -58,6 +58,7 @@
   t/Event
   (process-event [_ app]
     ;; Provide some fake results
+    (println "SEARCH RESULTS READY")
     (assoc app
            :search-in-progress? false
            :results [{:id 1 :url "http://catpics.example.com/cat1.jpg" :name "Cat doing funny things"}
@@ -112,8 +113,9 @@
      (is (= "cat" (.-value (sel1 :#search)) (:term @app)))
      (is (:search-in-progress? @app))
      (is (sel1 :.loader))
+     (r/force-update-all)
 
-     (after 100
+     (after 2000
             #(do
                ;; Results have appeared
                (is (nil? (sel1 :.loader)))

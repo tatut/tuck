@@ -10,7 +10,8 @@
                                                 cljsjs/react-with-addons]]
                                   [reagent "0.7.0" :exclusions [cljsjs/react]]
                                   [cljsjs/react-with-addons "15.6.1-0"]
-                                  [org.clojure/core.async "0.4.474"]]}}
+                                  [org.clojure/core.async "0.4.474"]
+                                  [clj-chrome-devtools "20180310"]]}}
   :cljsbuild {:builds [{:id "prod"
                         :source-paths ["src"]
                         :compiler {:optimizations :advanced
@@ -18,8 +19,7 @@
                                    :closure-output-charset "US-ASCII"}}
                        {:id "test"
                         :source-paths ["src" "test"]
-                        :compiler {:output-to "target/cljs/test/test.js"
-                                   :optimizations :none
+                        :compiler {:output-to "target/test.js"
+                                   :optimizations :whitespace
                                    :pretty-print  true
-                                   :closure-output-charset "US-ASCII"
-                                   :main tuck.runner}}]})
+                                   :closure-output-charset "US-ASCII"}}]})
