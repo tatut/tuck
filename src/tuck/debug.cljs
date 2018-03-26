@@ -91,13 +91,18 @@
       (update :watches (fnil conj []) (read-string (:new-watch-path app)))
       (assoc :new-watch-path "")))
 
+(defn- short-fq-name [name]
+  (str/replace name #"\w+(\.|/)" (fn [[part]]
+                                   (str (subs part 0 1) "."))))
+
+
 (defn state-replay-controls [e! {:keys [states current-state client-component client-state]}]
   (let [last-state (dec (count states))]
     [:div.tuck-debugger-replay
      "State:" current-state " / " last-state
      (when-let [at-event (and (seq states)
                               (:event (nth states current-state)))]
-       [:div (-> at-event type pr-str)])
+       [:div (-> at-event type pr-str short-fq-name)])
      [:input.state-slider
       {:style {:width "250px"}
        :type "range" :min 0 :max last-state :value current-state
