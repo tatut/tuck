@@ -5,7 +5,8 @@
              :refer-macros [define-event]]
             [tuck.debug :as debug]
             [reagent.core :as r]
-            [ajax.core :refer [GET]])
+            [ajax.core :refer [GET]]
+            [figwheel.client :as fw])
   (:require-macros [tuck.intercept :refer [intercept]]))
 
 (defonce app (r/atom {:counter-a 42
@@ -126,3 +127,5 @@
 (defn start []
   (r/render [debug/tuck app main]
             (.getElementById js/document "app")))
+
+(fw/start)
