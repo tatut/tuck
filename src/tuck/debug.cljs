@@ -170,11 +170,7 @@
 
 (defn debug-ui [e! {:keys [states current-state client-component client-state] :as debug}]
   [:span
-   [client-component
-    (intercept e!
-               (:default e
-                         (e! (->ClientEvent e))))
-    client-state]
+   [client-component (tuck/wrap e! ->ClientEvent) client-state]
 
    [:div.tuck-debugger {:style {:padding "0.3em"
                                 :border "solid 1px black"
@@ -183,7 +179,8 @@
                                 :right 0
                                 :height "100%"
                                 :width "300px"
-                                :background-color "wheat"}}
+                                :background-color "wheat"
+                                :z-index 10000}}
 
 
     [:div.debugger-controls {:style {:display "flex"
