@@ -173,9 +173,26 @@
                                  (e! (->AddWatch)))
                 :on-change (tuck/send-value! e! ->SetNewWatchPath)}]]]]]])
 
+;; Keep track of whether events are allowed.
+;; Some components send events when they are created
+;; to initialize stuff. Disallow events when rendering
+;; a historical state.
+(def allow-events (atom true))
+
 (defn debug-ui [e! {:keys [states current-state client-component client-state] :as debug}]
+  (when (not= current-state (dec (count states)))
+    ;; NOT AT LATEST STATE, don't allow events during render
+    (reset! allow-events false)
+    (r/after-render #(reset! allow-events true)))
+
   [:span
-   [client-component (tuck/wrap e! ->ClientEvent) client-state]
+   [client-component
+    (tuck/wrap
+     (fn [event]
+       (when @allow-events
+         (e! event)))
+     ->ClientEvent)
+    client-state]
 
    [:div.tuck-debugger {:style {:padding "0.3em"
                                 :border "solid 1px black"
