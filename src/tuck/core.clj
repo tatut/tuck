@@ -58,3 +58,29 @@
 
               ;; Normal event
               apply-event))))))
+
+(defmacro define-assoc-events
+  "Define events that simply take their parameter and assoc it to the given path in the app state.
+  Takes pairs of event name and path-vector.
+  For example:
+
+  (define-assoc-events UpdateUserName [:user :name])
+
+  Will define an event record type called UpdateUserName which has one field and
+  whose process-event will update the value of the field to the app state path [:user :name].
+  The new value will overwrite the value (if any) in the app state."
+  [& events-and-paths]
+  (assert (seq events-and-paths)
+          "Events and paths is empty! Specify event name and path in app state.")
+  (assert (even? (count events-and-paths))
+          "Odd number of arguments. Expected alternating event names and app state paths.")
+  `(do
+     ~@(for [[name path] (partition 2 events-and-paths)]
+         (do
+           (assert (symbol? name)
+                   (str "Illegal argument. Event name must be a symbol, got: " (pr-str name)))
+           (assert (vector? path)
+                   (str "Illegal argument. Path must be a vector, got: " (pr-str path)))
+           `(define-event ~name [value#]
+              {:path ~path}
+              value#)))))
