@@ -193,3 +193,40 @@
     (sim/click (sel1 :#add-title) {})
     (r/force-update-all)
     (is (= {:user {:name "Mr. Anderson"}} @app))))
+
+
+;; Test send-async within send-async handling
+
+(define-event Async2 [bar]
+  {}
+  (assoc app :bar bar))
+
+(define-event Async1 [foo]
+  {}
+  (after 25 (t/send-async! ->Async2 (* foo 2)))
+  (assoc app :foo foo))
+
+(define-event Async0 []
+  {}
+  (after 25 (t/send-async! ->Async1 21))
+  app)
+
+(defn nested-async-ui [e! app]
+  [:button {:on-click #(e! (->Async0))}])
+
+(deftest nested-async
+  (let [app (r/atom {})]
+    (async
+     done
+
+     (r/render [t/tuck app nested-async-ui] @c)
+
+     (sim/click (sel1 :button) {})
+
+     (r/force-update-all)
+
+     (after
+      100
+      #(do
+         (is (= @app {:foo 21 :bar 42}) "both async events processed")
+         (done))))))
