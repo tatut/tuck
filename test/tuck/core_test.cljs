@@ -1,5 +1,5 @@
 (ns tuck.core-test
-  (:require [tuck.core :as sut :refer-macros [define-event]]
+  (:require [tuck.core :as sut :refer-macros [define-event define-assoc-events]]
             [clojure.test :refer [use-fixtures deftest is async]]
             [cljs-react-test.simulate :as sim]
             [cljs-react-test.utils :as tu]
@@ -230,3 +230,11 @@
       #(do
          (is (= @app {:foo 21 :bar 42}) "both async events processed")
          (done))))))
+
+;; Test define-assoc-events convenience macro
+
+(define-assoc-events SetTheThing [:where :the :thing :should :be])
+
+(deftest set-the-thing
+  (is (= (t/process-event (->SetTheThing "THIS IS THE THING") {})
+         {:where {:the {:thing {:should {:be "THIS IS THE THING"}}}}})))
