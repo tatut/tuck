@@ -16,7 +16,31 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 
 <img src="https://raw.github.com/tatut/tuck/master/docs/tuck-concepts.svg?sanitize=true">
 
+The entrypoint to tuck is the `tuck.core/tuck` reagent component which takes your app state (a ratom) and your 
+root component as arguments. Tuck will create a control handle and call your root component with the it and the current 
+dereferenced value of the app state. The control handle is used to dispatch events for processing and is typically 
+called `e!`.
 
+### Minimal example 
+```clojure
+(ns tuck-example.core
+  (:require [reagent.core :as r]
+            [tuck.core :as t :refer-macros [define-event]]))
+  
+(define-event UpdateName [new-name]
+  {:path [:name]}
+  new-name)
+
+(defn my-root-component [e! {:keys [name :as app]]
+  [:input {:value name 
+           :on-change #(e! (->UpdateName (-> % .-target .-value)))}])
+           
+(def app-state (r/atom {}))
+
+(defn main []
+  (r/render [t/tuck app-state my-root-component]
+            (.getElementById js/document "app")))
+```
 
 ## Changes
 
