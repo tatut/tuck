@@ -19,7 +19,7 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 The entrypoint to tuck is the `tuck.core/tuck` reagent component which takes your app state (a ratom) and your 
 root component as arguments. Tuck will create a control handle and call your root component with the it and the current 
 dereferenced value of the app state. The control handle is used to dispatch events for processing and is typically 
-called `e!`.
+called `e!`. All changes to app state are done by event processing and must be sent through the control handle.
 
 ### Minimal example 
 ```clojure
@@ -41,6 +41,19 @@ called `e!`.
   (r/render [t/tuck app-state my-root-component]
             (.getElementById js/document "app")))
 ```
+
+### Defining events
+
+Events are anything that implement the `tuck.core/Event` protocol. The protocol defines a single method called
+`process-event` that takes the event and the current value of the app state and produces a new app state. 
+
+You can define your events as records and define the implementation separately with `extend-protocol` or use the
+convenience macro `define-event` which defines the event record and the processing code. The `define-event` macro
+has an option called `:path` which is a vector defining a path in the app state where the update should take place.
+If no path is defined, the root app state is passed.
+
+Sometimes events just need to assoc a value somewhere in the app state, there is a further convenience macro called
+`define-assoc-events` which takes alternating names and app state paths.
 
 ## Changes
 
