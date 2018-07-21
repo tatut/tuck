@@ -12,6 +12,12 @@ Tuck can be used at any level (not just at the app root): simply pass tuck a rea
 
 Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but is even lighter and has no dependencies (aside form Reagent itself).
 
+## Documentation
+
+<img src="https://raw.github.com/tatut/tuck/master/docs/tuck-concepts.svg?sanitize=true">
+
+
+
 ## Changes
 
 ### Version 20180327
