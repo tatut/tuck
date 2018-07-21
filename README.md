@@ -22,6 +22,10 @@ dereferenced value of the app state. The control handle is used to dispatch even
 called `e!`. All changes to app state are done by event processing and must be sent through the control handle.
 
 ### Minimal example 
+
+This is a minimal example that shows how to use tuck. Normally you would want to separate your view code and your event
+definitions to separate name spaces.
+
 ```clojure
 (ns tuck-example.core
   (:require [reagent.core :as r]
