@@ -84,6 +84,10 @@ You can use `send-async!` to create callbacks to pass to XHR calls.
 
 ## Changes
 
+### Version 20180721
+
+* Added: `define-assoc-events` convenience macro
+
 ### Version 20180327
 
 * Added: debugger supports watches
