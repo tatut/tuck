@@ -27,7 +27,31 @@
       (assoc app :things-being-worked-on )))
   )
 
-(defmacro define-event [event-record-name event-params options & body]
+(defmacro define-event
+  "Define a new event record type and its [[process-event]] implementation.
+
+  - `event-record-name` must be a symbol defining the event name.
+  - `event-params` is a vector containing the names of the record's fields.
+  - `options` a map of parameters.
+  - `body` code to apply the event to current app state.
+
+  Supported options:
+
+  - `:path` a vector containing a path to the app state where the update should take place
+  - `:app` a name to bind the current app state to (defaults to `app`)
+
+  The code in `body` can refer to the event params and the app state by their name.
+  The app state is the value under `:path` and the returned value will replace it.
+
+  Example:
+  ```clojure
+  (define-event UpdateCustomerForm [form-data]
+    {:path [:customer :editing]
+     :app customer}
+    (merge customer form-data))
+  ```"
+  {:doc/format :markdown}
+  [event-record-name event-params options & body]
   (let [handler-fn-name (gensym (str event-record-name "-handler-"))
         app-sym (or (:app options) 'app)
         event (gensym "event")
@@ -64,11 +88,12 @@
   Takes pairs of event name and path-vector.
   For example:
 
-  (define-assoc-events UpdateUserName [:user :name])
+  `(define-assoc-events UpdateUserName [:user :name])`
 
   Will define an event record type called UpdateUserName which has one field and
-  whose process-event will update the value of the field to the app state path [:user :name].
+  whose [[process-event]] will update the value of the field to the app state path `[:user :name]`.
   The new value will overwrite the value (if any) in the app state."
+  {:doc/format :markdown}
   [& events-and-paths]
   (assert (seq events-and-paths)
           "Events and paths is empty! Specify event name and path in app state.")

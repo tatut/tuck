@@ -23,7 +23,16 @@
 
 (defn send-value!
   "Returns a UI event handler that sends the event's value
-  to the UI message processing after calling constructor with it."
+  to the UI message processing after calling constructor with it.
+  Useful for DOM change effects.
+
+  Example:
+  ```clojure
+  [:input {:type \"text\"
+           :value name
+           :on-change (t/send-value! e! ->UpdateName)}]
+  ```"
+  {:doc/format :markdown}
   [e! constructor & args]
   (fn [e]
     (.stopPropagation e)
@@ -36,8 +45,19 @@
   *current-send-function*)
 
 (defn send-async!
-  "Returns a callback which sends its argument to the UI after wrapping
-  it with the given constructor. Must be called from within process-event."
+  "Returns a callback function which will create and apply a new event.
+  THe `constructor` must be a function that returns an event. The constructor is called with the
+  callback parameters and the (optional) arguments.
+
+  **Must be called from within [[process-event]].**
+
+  Example:
+  ```clojure
+  ;; inside some event's processing code
+  (GET! \"/fetch-things\" {:on-success (t/send-async! ->FetchThingsResponse)
+                         :on-failure (t/send-async! ->ServerError)})
+  ```"
+  {:doc/format :markdown}
   [constructor & args]
   (assert (not (nil? *current-send-function*)) "send-async! called outside of process-event")
   (let [e! *current-send-function*]
@@ -100,7 +120,7 @@
                       (validate current-app-state event new-app-state
                                 spec on-invalid-state))))))))))
 
-(defn control-with-paths [app path-fn]
+(defn- control-with-paths [app path-fn]
   (control app path-fn nil nil))
 
 (defn- default-on-invalid-state [previous-state event new-state spec]

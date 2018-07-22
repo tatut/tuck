@@ -3,7 +3,8 @@
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.238"]]
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.8"]]
+            [lein-doo "0.1.8"]
+            [lein-codox "0.10.4"]]
   :profiles {:dev
              {:dependencies [[prismatic/dommy "1.1.0"]
                              [cljs-react-test "0.1.4-SNAPSHOT"
@@ -23,4 +24,8 @@
                         :compiler {:output-to "target/test.js"
                                    :optimizations :whitespace
                                    :pretty-print  true
-                                   :closure-output-charset "US-ASCII"}}]})
+                                   :closure-output-charset "US-ASCII"}}]}
+
+  :codox {:language :clojurescript
+          :output-path "docs/codox"
+          :source-uri "https://github.com/tatut/tuck/blob/master/{filepath}#L{line}"})
