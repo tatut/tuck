@@ -15,6 +15,8 @@ Tuck is heavily inspired by [Petrol](https://github.com/krisajenkins/petrol) but
 
 ## Documentation
 
+See the codox generated [API documentation](https://tatut.github.io/tuck/codox/index.html).
+
 <img src="https://raw.github.com/tatut/tuck/master/docs/tuck-concepts.svg?sanitize=true">
 
 The entrypoint to tuck is the `tuck.core/tuck` reagent component which takes your app state (a ratom) and your
