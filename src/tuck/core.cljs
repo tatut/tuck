@@ -1,6 +1,7 @@
 (ns tuck.core
   (:require [reagent.core :as r]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [tuck.effect :as effect]))
 
 (def ^{:private true
        :dynamic true
@@ -20,6 +21,21 @@
   (process-event [_ app]
     (update-in app key-path
                #(process-event event %))))
+
+(deftype EffectReturn [app effects])
+
+(defn fx
+  "Create an effect return from a `process-event` invocation.
+  Takes the updated `app` state and one or more effects to be
+  applied. An effect may be a function or arity 1 or a map
+  describing an effect. The map effect is applied by calling
+  `tuck.effect/process-effect` multimethod.
+
+  Effects are run after the app state has been updated to its
+  new value.
+  "
+  [app & effects]
+  (EffectReturn. app effects))
 
 (defn send-value!
   "Returns a UI event handler that sends the event's value
@@ -97,6 +113,24 @@
     new-app-state
     (on-invalid-state previous-app-state event new-app-state spec)))
 
+(defn- process-effect* [e! effect]
+  (if (fn? effect)
+    (effect e!)
+    (effect/process-effect e! effect)))
+
+(defn- process-event* [e! event current-app-state]
+  (let [ret (process-event event current-app-state)]
+    (if (instance? EffectReturn ret)
+      ;; This is an effect return, set timeout to process effects and return new app state
+      (let [new-app-state (.-app ret)]
+        (.setTimeout js/window
+                     #(doseq [effect (.-effects ret)]
+                      (process-effect* e! effect)) 0)
+        new-app-state)
+
+      ;; This is the new app state, return it directly
+      ret)))
+
 (defn control
   ([app]
    (control app (constantly nil) nil nil))
@@ -111,12 +145,12 @@
                     (let [new-app-state
                           (update-in current-app-state path
                                      (fn [current-app-state-in-path]
-                                       (process-event event current-app-state-in-path)))]
+                                       (process-event* *current-send-function* event current-app-state-in-path)))]
                       (validate current-app-state event new-app-state
                                 spec on-invalid-state))))
            (swap! app
                   (fn [current-app-state]
-                    (let [new-app-state (process-event event current-app-state)]
+                    (let [new-app-state (process-event* *current-send-function* event current-app-state)]
                       (validate current-app-state event new-app-state
                                 spec on-invalid-state))))))))))
 
