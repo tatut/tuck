@@ -66,6 +66,8 @@ convenience macro called `define-assoc-events` which takes alternating names and
 
 ### Asynchronous events
 
+**NOTE:** There is a newer (easier to test) way to do side effects, see "Retuning effects" below.
+
 An application will most likely need some asynchronous events to communicate with servers or set
 timeouts. This can be done by using `tuck.core/send-async!` which must be called within event
 processing code. The `send-async!` function takes an event constructor and optional arguments
@@ -83,6 +85,38 @@ You can use `send-async!` to create callbacks to pass to XHR calls.
   ;; Return new app state
   (assoc app :fetching-things? true))
 ```
+
+### Returning effects
+
+A `process-event` implementation may also need to fire off effects like HTTP calls or
+other side effects. This can be done by returning an effect descriptor with the `fx` function.
+
+The `fx` function takes the new app state and one (or more) effects that should be run after
+the `process-event` is done. An effect may be a function with one argument (the `e!` control handle)
+or a map with a `:tuck.effect/type` keyword describing the effect to process.
+
+For function effects, they are simply called and can send further events by calling the `e!` parameter.
+
+For maps, they are run with `tuck.effect/process-effect` multimethod. To create new types of effects,
+simply add implementations for that method.
+
+```clojure
+;; Same simple event, as in the above send-async! example
+(define-event FetchThings
+  {}
+  (fx
+    ;; Return new app state
+    (assoc app :fetching-things? true)
+
+    ;; Launch an XHR call by an effect descriptor
+    {:tuck.effect/type :http
+     :url "/fetch-things"
+     :on-success ->FetchThingsResponse}))
+```
+
+Tuck does not provide any effect types out of the box. You must provide an implementation of the
+`:http` effect type in order to use it.
+
 
 ## Changes
 
