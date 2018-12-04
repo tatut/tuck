@@ -97,7 +97,7 @@
     new-app-state
     (on-invalid-state previous-app-state event new-app-state spec)))
 
-(defn- control
+(defn control
   ([app]
    (control app (constantly nil) nil nil))
   ([app path-fn spec on-invalid-state]
