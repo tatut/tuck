@@ -86,6 +86,10 @@ You can use `send-async!` to create callbacks to pass to XHR calls.
 
 ## Changes
 
+### Version 20181204
+
+* New effect system that is easier to test (see `fx` function and `tuck.effect` namespace)
+
 ### Version 20180722
 
 * Changed: improved docstrings (no code changes)
