@@ -66,7 +66,7 @@ convenience macro called `define-assoc-events` which takes alternating names and
 
 ### Asynchronous events
 
-**NOTE:** There is a newer (easier to test) way to do side effects, see "Retuning effects" below.
+**NOTE:** There is a newer (easier to test) way to do side effects, see "Returning effects" below.
 
 An application will most likely need some asynchronous events to communicate with servers or set
 timeouts. This can be done by using `tuck.core/send-async!` which must be called within event

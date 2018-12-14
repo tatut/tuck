@@ -25,9 +25,9 @@
 (deftype EffectReturn [app effects])
 
 (defn fx
-  "Create an effect return from a `process-event` invocation.
+  "Creates an effect to be returned from a `process-event` invocation.
   Takes the updated `app` state and one or more effects to be
-  applied. An effect may be a function or arity 1 or a map
+  applied. An effect may be a function of arity 1 or a map
   describing an effect. The map effect is applied by calling
   `tuck.effect/process-effect` multimethod.
 
@@ -62,7 +62,7 @@
 
 (defn send-async!
   "Returns a callback function which will create and apply a new event.
-  THe `constructor` must be a function that returns an event. The constructor is called with the
+  The `constructor` must be a function that returns an event. The constructor is called with the
   callback parameters and the (optional) arguments.
 
   **Must be called from within [[process-event]].**
