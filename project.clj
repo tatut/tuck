@@ -13,7 +13,7 @@
                              [reagent "0.7.0" :exclusions [cljsjs/react]]
                              [cljsjs/react-with-addons "15.6.1-0"]
                              [org.clojure/core.async "0.4.474"]
-                             [clj-chrome-devtools "20180310"]]}}
+                             [clj-chrome-devtools "20190530"]]}}
   :cljsbuild {:builds [{:id "prod"
                         :source-paths ["src"]
                         :compiler {:optimizations :advanced
