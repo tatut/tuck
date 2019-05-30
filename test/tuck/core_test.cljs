@@ -94,43 +94,33 @@
      done
 
      (r/render [t/tuck app search] @c)
-     (.then
-      (js/screenshot)
-      (fn []
-        ;; after initial render, search term is empty, no results or loader is showing
-        (is (= (.-value (sel1 :#search)) ""))
-        (is (nil? (sel1 :div.loader)))
-        (is (nil? (sel1 :ul)))
+     ;; after initial render, search term is empty, no results or loader is showing
+     (is (= (.-value (sel1 :#search)) ""))
+     (is (nil? (sel1 :div.loader)))
+     (is (nil? (sel1 :ul)))
 
-        ;; writing 2 characters does not trigger search yet
-        (sim/change (sel1 :#search) {:target {:value "ca"}})
-        (r/force-update-all)
-        (.then
-         (js/screenshot)
-         (fn []
-           (is (= "ca" (.-value (sel1 :#search)) (:term @app)))
-           (is (not (:search-in-progress? @app)))
+     ;; writing 2 characters does not trigger search yet
+     (sim/change (sel1 :#search) {:target {:value "ca"}})
+     (r/force-update-all)
+     (is (= "ca" (.-value (sel1 :#search)) (:term @app)))
+     (is (not (:search-in-progress? @app)))
 
 
-           ;; writing a third character triggers search
-           (sim/change (sel1 :#search) {:target {:value "cat"}})
-           (r/force-update-all)
-           (.then
-            (js/screenshot)
-            (fn []
-              (is (= "cat" (.-value (sel1 :#search)) (:term @app)))
-              (is (:search-in-progress? @app))
-              (is (sel1 :.loader))
-              (r/force-update-all)
+     ;; writing a third character triggers search
+     (sim/change (sel1 :#search) {:target {:value "cat"}})
+     (r/force-update-all)
+     (is (= "cat" (.-value (sel1 :#search)) (:term @app)))
+     (is (:search-in-progress? @app))
+     (is (sel1 :.loader))
+     (r/force-update-all)
 
-              (after 2000
-                     #(do
-                        ;; Results have appeared
-                        (is (nil? (sel1 :.loader)))
-                        (is (= 2 (count (sel :li.result))))
-                        (is (= "Dancing cat" (.-innerHTML (sel1 "li.result:nth-child(2) a"))))
-                        (.then (js/screenshot)
-                               done))))))))))))
+     (after 2000
+            #(do
+               ;; Results have appeared
+               (is (nil? (sel1 :.loader)))
+               (is (= 2 (count (sel :li.result))))
+               (is (= "Dancing cat" (.-innerHTML (sel1 "li.result:nth-child(2) a"))))
+               (done))))))
 
 
 (defrecord AsyncNoArgs []

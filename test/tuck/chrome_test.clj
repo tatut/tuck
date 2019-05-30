@@ -7,6 +7,4 @@
                   '[tuck.core-test
                     tuck.intercept-test
                     tuck.path-test
-                    tuck.spec-test]
-                  {:screenshot-video? true
-                   :framerate 2}))
+                    tuck.spec-test]))
