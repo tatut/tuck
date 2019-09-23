@@ -133,22 +133,21 @@
 
 (defn- ui-send [app path-fn spec on-invalid-state event]
   (assert (satisfies? Event event))
-  (binding [*current-send-function* (or *current-send-function* ui-send)]
-    (let [path (path-fn event)]
-      (if path
-        (swap! app
-               (fn [current-app-state]
-                 (let [new-app-state
-                       (update-in current-app-state path
-                                  (fn [current-app-state-in-path]
-                                    (process-event* *current-send-function* event current-app-state-in-path)))]
-                   (validate current-app-state event new-app-state
-                             spec on-invalid-state))))
-        (swap! app
-               (fn [current-app-state]
-                 (let [new-app-state (process-event* *current-send-function* event current-app-state)]
-                   (validate current-app-state event new-app-state
-                             spec on-invalid-state))))))))
+  (let [path (path-fn event)]
+    (if path
+      (swap! app
+             (fn [current-app-state]
+               (let [new-app-state
+                     (update-in current-app-state path
+                                (fn [current-app-state-in-path]
+                                  (process-event* *current-send-function* event current-app-state-in-path)))]
+                 (validate current-app-state event new-app-state
+                           spec on-invalid-state))))
+      (swap! app
+             (fn [current-app-state]
+               (let [new-app-state (process-event* *current-send-function* event current-app-state)]
+                 (validate current-app-state event new-app-state
+                           spec on-invalid-state)))))))
 
 (defn- ui-send-partial [app path-fn spec on-invalid-state event-constructor event-args]
   (let [event (apply event-constructor event-args)]
@@ -159,16 +158,17 @@
    (control app (constantly nil) nil nil))
   ([app path-fn spec on-invalid-state]
    (fn e! [event & args]
-     (cond
-       ;; Got event, just apply it directly
-       (satisfies? Event event)
-       (do
-         (assert (empty? args) "Direct event application can't have extra arguments!")
-         (ui-send app path-fn spec on-invalid-state event))
+     (binding [*current-send-function* (or *current-send-function* e!)]
+       (cond
+         ;; Got event, just apply it directly
+         (satisfies? Event event)
+         (do
+           (assert (empty? args) "Direct event application can't have extra arguments!")
+           (ui-send app path-fn spec on-invalid-state event))
 
-       ;; Got function, return an event handler that constructs an event
-       (fn? event)
-       (r/partial ui-send-partial app path-fn spec on-invalid-state event args)))))
+         ;; Got function, return an event handler that constructs an event
+         (fn? event)
+         (r/partial ui-send-partial app path-fn spec on-invalid-state event args))))))
 
 (defn- control-with-paths [app path-fn]
   (control app path-fn nil nil))
