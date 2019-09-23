@@ -162,9 +162,7 @@
        (cond
          ;; Got event, just apply it directly
          (satisfies? Event event)
-         (do
-           (assert (empty? args) "Direct event application can't have extra arguments!")
-           (ui-send app path-fn spec on-invalid-state event))
+         (ui-send app path-fn spec on-invalid-state event)
 
          ;; Got function, return an event handler that constructs an event
          (fn? event)
