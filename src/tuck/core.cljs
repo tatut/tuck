@@ -149,8 +149,8 @@
                  (validate current-app-state event new-app-state
                            spec on-invalid-state)))))))
 
-(defn- ui-send-partial [app path-fn spec on-invalid-state event-constructor event-args]
-  (let [event (apply event-constructor event-args)]
+(defn- ui-send-partial [app path-fn spec on-invalid-state event-constructor initial-event-args & args]
+  (let [event (apply event-constructor (concat initial-event-args args))]
     (ui-send app path-fn spec on-invalid-state event)))
 
 (defn control
