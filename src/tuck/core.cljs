@@ -149,9 +149,10 @@
                  (validate current-app-state event new-app-state
                            spec on-invalid-state)))))))
 
-(defn- ui-send-partial [app path-fn spec on-invalid-state event-constructor initial-event-args & args]
-  (let [event (apply event-constructor (concat initial-event-args args))]
-    (ui-send app path-fn spec on-invalid-state event)))
+(defn- ui-send-partial [e! app path-fn spec on-invalid-state event-constructor initial-event-args & args]
+  (binding [*current-send-function* e!]
+    (let [event (apply event-constructor (concat initial-event-args args))]
+      (ui-send app path-fn spec on-invalid-state event))))
 
 (defn control
   ([app]
@@ -166,7 +167,7 @@
 
          ;; Got function, return an event handler that constructs an event
          (fn? event)
-         (r/partial ui-send-partial app path-fn spec on-invalid-state event args))))))
+         (r/partial ui-send-partial *current-send-function* app path-fn spec on-invalid-state event args))))))
 
 (defn- control-with-paths [app path-fn]
   (control app path-fn nil nil))
