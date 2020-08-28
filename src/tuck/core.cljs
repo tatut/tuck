@@ -119,17 +119,30 @@
     (effect/process-effect e! effect)))
 
 (defn- process-event* [e! event current-app-state]
-  (let [ret (process-event event current-app-state)]
-    (if (instance? EffectReturn ret)
-      ;; This is an effect return, set timeout to process effects and return new app state
-      (let [new-app-state (.-app ret)]
-        (.setTimeout js/window
-                     #(doseq [effect (.-effects ret)]
-                      (process-effect* e! effect)) 0)
-        new-app-state)
+  (let [ret (process-event event current-app-state)
+        app (if (instance? EffectReturn ret)
+              ;; This is an effect return, set timeout to process effects and return new app state
+              (let [new-app-state (.-app ret)]
+                (.setTimeout js/window
+                             #(doseq [effect (.-effects ret)]
+                                (process-effect* e! effect)) 0)
+                new-app-state)
 
-      ;; This is the new app state, return it directly
-      ret)))
+              ;; This is the new app state, return it directly
+              ret)]
+    (when-let [after-event (-> event meta ::after-event)]
+      (.setTimeout js/window after-event 0))
+    app))
+
+(defn after-event
+  "Callback to run after the given event instance has been applied.
+  This is to make it easier to integrate with some component local
+  state. The callback is invoked with no arguments after the event
+  process-event returns."
+  [event callback]
+  (with-meta
+    event
+    {::after-event callback}))
 
 (defn- ui-send [app path-fn spec on-invalid-state event]
   (assert (satisfies? Event event))
